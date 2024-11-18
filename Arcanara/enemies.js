@@ -8,30 +8,37 @@ if (!orc1Element) {
 const orc1 = {
   x: 770,
   y: 100,
-  width: 65,
-  height: 85,
+  width: 65, // Match CSS width
+  height: 80, // Match CSS height
   isInCombat: false,
-  facing: "left", // 'left' or 'right'
-  currentAction: "idle", // 'idle' or 'attack'
+  facing: "left",
+  currentAction: "idle",
 };
 
-// Apply the initial position to the element
+// Animation parameters
+const ORC1_IDLE_ROW = 0;
+const ORC1_ATTACK_ROW = 0;
+const ORC1_IDLE_COLS = 4;
+const ORC1_ATTACK_COLS = 4;
+const ORC1_FRAME_WIDTH = 96;
+const ORC1_FRAME_HEIGHT = 96;
+const ORC1_ANIMATION_SPEED = 200;
+const ORC1_ATTACK_SPEED = 150;
+
+// Sprite sheet dimensions
+const IDLE_SHEET_WIDTH = 384; // 96 * 4 frames
+const IDLE_SHEET_HEIGHT = 384;
+const ATTACK_SHEET_WIDTH = 768; // 192 * 4 frames (scaled from 512)
+const ATTACK_SHEET_HEIGHT = 384; // Scaled from 256
+
+let orc1CurrentFrame = 0;
+let orc1LastFrameChange = 0;
+
+// Apply initial position
 if (orc1Element) {
   orc1Element.style.left = `${orc1.x}px`;
   orc1Element.style.top = `${orc1.y}px`;
 }
-
-// Animation parameters
-const ORC1_IDLE_ROW = 0;
-const ORC1_ATTACK_ROW = 0; // Row for attack animation
-const ORC1_ANIMATION_COLS = 4;
-const ORC1_FRAME_WIDTH = 96;
-const ORC1_FRAME_HEIGHT = 96;
-const ORC1_ANIMATION_SPEED = 200;
-const ORC1_ATTACK_SPEED = 150; // Slightly faster for attack animation
-
-let orc1CurrentFrame = 0;
-let orc1LastFrameChange = 0;
 
 // Function to flip orc sprite based on facing direction
 function updateOrc1Facing(characterX) {
@@ -43,7 +50,9 @@ function updateOrc1Facing(characterX) {
 }
 
 // Function to animate orc1
- function animateOrc1(timestamp, characterX) {
+function animateOrc1(timestamp, characterX) {
+  if (!orc1Element) return;
+
   if (!orc1LastFrameChange) {
     orc1LastFrameChange = timestamp;
   }
@@ -57,21 +66,30 @@ function updateOrc1Facing(characterX) {
 
   if (elapsed > animationSpeed) {
     // Advance to next frame
-    orc1CurrentFrame = (orc1CurrentFrame + 1) % ORC1_ANIMATION_COLS;
+    const maxFrames =
+      orc1.currentAction === "attack" ? ORC1_ATTACK_COLS : ORC1_IDLE_COLS;
+    orc1CurrentFrame = (orc1CurrentFrame + 1) % maxFrames;
 
-    // Update sprite sheet and background position
+    // Set the appropriate sprite sheet and background size
     if (orc1.currentAction === "attack") {
-      orc1Element.style.backgroundImage = 'url("./images/orc1_attack_full.png")';
+      orc1Element.style.backgroundImage =
+        'url("./images/orc1_attack_full.png")';
+      orc1Element.style.backgroundSize = `${ATTACK_SHEET_WIDTH}px ${ATTACK_SHEET_HEIGHT}px`;
+
+      // Calculate position for attack frames (scaled from 512x256)
+      const scaledFrameWidth = ATTACK_SHEET_WIDTH / ORC1_ATTACK_COLS;
+      orc1Element.style.backgroundPosition = `-${
+        orc1CurrentFrame * scaledFrameWidth
+      }px 0px`;
     } else {
       orc1Element.style.backgroundImage = 'url("./images/orc1_idle_full.png")';
-    }
+      orc1Element.style.backgroundSize = `${IDLE_SHEET_WIDTH}px ${IDLE_SHEET_HEIGHT}px`;
 
-    orc1Element.style.backgroundPosition = `-${
-      orc1CurrentFrame * ORC1_FRAME_WIDTH
-    }px -${
-      (orc1.currentAction === "attack" ? ORC1_ATTACK_ROW : ORC1_IDLE_ROW) *
-      ORC1_FRAME_HEIGHT
-    }px`;
+      // Position for idle frames
+      orc1Element.style.backgroundPosition = `-${
+        orc1CurrentFrame * ORC1_FRAME_WIDTH
+      }px -${ORC1_IDLE_ROW * ORC1_FRAME_HEIGHT}px`;
+    }
 
     orc1LastFrameChange = timestamp;
   }
@@ -81,8 +99,8 @@ function updateOrc1Facing(characterX) {
 }
 
 // Function to initiate combat
- function initiateCombatWithOrc1(characterHitbox) {
-  const COMBAT_RANGE = 100; // Adjust this value to set the combat initiation range
+function initiateCombatWithOrc1(characterHitbox) {
+  const COMBAT_RANGE = 100;
 
   // Calculate distance between character and orc
   const dx =
@@ -95,16 +113,18 @@ function updateOrc1Facing(characterX) {
   if (distance <= COMBAT_RANGE && !orc1.isInCombat) {
     orc1.isInCombat = true;
     orc1.currentAction = "attack";
+    orc1CurrentFrame = 0;
     return true;
   } else if (distance > COMBAT_RANGE && orc1.isInCombat) {
     orc1.isInCombat = false;
     orc1.currentAction = "idle";
+    orc1CurrentFrame = 0;
   }
   return false;
 }
 
 // Function to check collision between character and Orc1
- function checkCollisionWithOrc1(characterHitbox) {
+function checkCollisionWithOrc1(characterHitbox) {
   const orc1Hitbox = {
     x: orc1.x,
     y: orc1.y,
@@ -121,7 +141,7 @@ function updateOrc1Facing(characterX) {
 }
 
 // Function to update Orc1's position
- function updateOrc1Position(newX, newY) {
+function updateOrc1Position(newX, newY) {
   orc1.x = newX;
   orc1.y = newY;
   if (orc1Element) {
@@ -134,6 +154,5 @@ function updateOrc1Facing(characterX) {
 if (orc1Element) {
   requestAnimationFrame((timestamp) => animateOrc1(timestamp, orc1.x));
 }
-
 
 export { checkCollisionWithOrc1, initiateCombatWithOrc1, animateOrc1 };

@@ -164,7 +164,7 @@ main {
 
 #orc1 {
   position: absolute;
-  width: 96px; /* New display size */
+  width: 96px; 
   height: 96px;
   background-image: url("images/orc1_idle_full.png");
   background-repeat: no-repeat;
