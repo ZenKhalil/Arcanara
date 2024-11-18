@@ -21,6 +21,7 @@ const character = {
   speed: 200,
   direction: "idle-right",
   isMoving: false,
+  isAttacking: false,
   currentFrame: 0,
 };
 
@@ -34,12 +35,67 @@ const animations = {
   "idle-right": { row: 0, frame: 1, frames: 1 },
   "idle-left": { row: 0, frame: 2, frames: 1 },
   "idle-up": { row: 0, frame: 3, frames: 1 },
+  "attack-right": { row: 5, frames: 4 },
+  "attack-left": { row: 6, frames: 4 },
+  "attack-down": { row: 7, frames: 4 },
+  "attack-up": { row: 8, frames: 4 },
 };
 
 // Grab character element and set initial z-index
 const characterElement = document.getElementById("character");
 characterElement.style.zIndex = 1;
 
+// Add attack animation function
+function startAttackAnimation() {
+  if (character.isAttacking) return;
+
+  character.isAttacking = true;
+  character.currentFrame = 0;
+  animationTimer = 0; // Reset animation timer
+
+  // Determine attack direction based on current facing direction
+  let attackDirection;
+  if (character.direction.includes("right")) {
+    attackDirection = "attack-right";
+  } else if (character.direction.includes("left")) {
+    attackDirection = "attack-left";
+  } else if (character.direction.includes("up")) {
+    attackDirection = "attack-up";
+  } else {
+    attackDirection = "attack-down";
+  }
+
+  character.direction = attackDirection;
+  updateCharacterPosition();
+}
+
+// Add function to complete attack animation
+function completeAttackAnimation() {
+  character.isAttacking = false;
+  // Reset to idle position based on attack direction
+  const direction = character.direction.split("-")[1];
+  character.direction = `idle-${direction}`;
+  character.currentFrame = 0;
+  animationTimer = 0; // Reset animation timer
+  updateCharacterPosition();
+}
+
+// Add F key listener for attacks
+document.addEventListener("keydown", (event) => {
+  if (event.key.toLowerCase() === "f" && !character.isAttacking) {
+    startAttackAnimation();
+    // Start the game loop for attack animation
+    requestAnimationFrame(gameLoop);
+  } else if (
+    ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
+  ) {
+    keysPressed[event.key] = true;
+    if (!character.isMoving && !character.isAttacking) {
+      character.isMoving = true;
+      requestAnimationFrame(gameLoop);
+    }
+  }
+});
 
 // Define different types of objects and their behavior
 const ALWAYS_BELOW_CHARACTER = ["bridge", "path", "water"];
@@ -241,19 +297,31 @@ let animationTimer = 0;
 let isFirstMove = true; // Add this flag to handle first movement
 
 function gameLoop(timestamp) {
-  if (isFirstMove) {
-    lastTime = timestamp;
-    isFirstMove = false;
-  }
-  
   if (!lastTime) lastTime = timestamp;
   const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
   lastTime = timestamp;
 
+  // Handle attack animation
+  if (character.isAttacking) {
+    animationTimer += deltaTime * 1000;
+    if (animationTimer >= ANIMATION_SPEED) {
+      animationTimer = 0;
+      character.currentFrame++;
+
+      if (character.currentFrame >= animations[character.direction].frames) {
+        completeAttackAnimation();
+      } else {
+        updateCharacterPosition();
+      }
+    }
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+
   if (character.isMoving) {
     let moved = false;
     let newDirection = character.direction;
-    
+
     // Calculate movement vector
     let dx = 0;
     let dy = 0;
@@ -283,15 +351,21 @@ function gameLoop(timestamp) {
       const newY = character.y + dy * character.speed * deltaTime;
 
       // First check game bounds
-      const boundedX = Math.max(0, Math.min(gameWidth - DISPLAY_FRAME_WIDTH, newX));
-      const boundedY = Math.max(0, Math.min(gameHeight - DISPLAY_FRAME_HEIGHT, newY));
+      const boundedX = Math.max(
+        0,
+        Math.min(gameWidth - DISPLAY_FRAME_WIDTH, newX)
+      );
+      const boundedY = Math.max(
+        0,
+        Math.min(gameHeight - DISPLAY_FRAME_HEIGHT, newY)
+      );
 
       // Then check object collisions
       if (!checkCollision(boundedX, boundedY)) {
         character.x = boundedX;
         character.y = boundedY;
       }
-      
+
       if (character.direction !== newDirection) {
         character.direction = newDirection;
         character.currentFrame = 0;
@@ -311,7 +385,8 @@ function gameLoop(timestamp) {
       animationTimer += deltaTime * 1000;
       if (animationTimer >= ANIMATION_SPEED) {
         animationTimer = 0;
-        character.currentFrame = (character.currentFrame + 1) % animation.frames;
+        character.currentFrame =
+          (character.currentFrame + 1) % animation.frames;
         updateCharacterPosition();
       }
     }
@@ -323,10 +398,13 @@ function gameLoop(timestamp) {
   }
 }
 
-// Update the stopCharacterAnimation function to reset the first move flag
+
+// Update stopCharacterAnimation to check for attacking
 function stopCharacterAnimation() {
+  if (character.isAttacking) return; // Don't stop if attacking
+  
   character.isMoving = false;
-  isFirstMove = true; // Reset first move flag
+  isFirstMove = true;
   if (!character.direction.startsWith("idle-")) {
     character.direction = `idle-${character.direction}`;
   }

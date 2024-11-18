@@ -9,8 +9,8 @@ if (!orc1Element) {
 const orc1 = {
   x: 770,
   y: 100,
-  width: 96,
-  height: 96,
+  width: 65,
+  height: 85,
 };
 
 // Apply the initial position to the element
