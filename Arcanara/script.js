@@ -1,5 +1,5 @@
 import { collisionZones } from "./objects.js";
-import { checkCollisionWithOrc1 } from "./enemies.js"; // Import the updated function
+import { checkCollisionWithOrc1, initiateCombatWithOrc1, animateOrc1 } from "./enemies.js"; // Import the updated function
 
 const gameContainer = document.getElementById("game-container");
 
@@ -279,13 +279,14 @@ function checkCollision(newX, newY) {
     }
   }
 
-  // Check collision with Orc1
+  // Check collision with Orc1 and handle combat
   if (checkCollisionWithOrc1(characterHitbox)) {
     console.log("Collision detected with Orc1!");
-    // Handle Orc1-specific collision (e.g., initiate combat)
-    initiateCombatWithOrc1();
     return true; // Collision detected
   }
+
+  // Check for combat range even if not colliding
+  initiateCombatWithOrc1(characterHitbox);
 
   return false; // No collision
 }
@@ -364,6 +365,15 @@ function gameLoop(timestamp) {
       if (!checkCollision(boundedX, boundedY)) {
         character.x = boundedX;
         character.y = boundedY;
+
+        // Pass character's current position to animateOrc1
+        const characterCenter = {
+          x: character.x + DISPLAY_FRAME_WIDTH / 2,
+          y: character.y + DISPLAY_FRAME_HEIGHT / 2,
+        };
+        requestAnimationFrame((timestamp) =>
+          animateOrc1(timestamp, characterCenter.x)
+        );
       }
 
       if (character.direction !== newDirection) {
