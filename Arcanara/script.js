@@ -1,5 +1,5 @@
 import { collisionZones } from "./objects.js";
-console.log("Imported collisionZones:", collisionZones);
+import { checkCollisionWithOrc1 } from "./enemies.js"; // Import the updated function
 
 const gameContainer = document.getElementById("game-container");
 
@@ -13,9 +13,6 @@ const FRAME_HEIGHT = 32;
 const DISPLAY_FRAME_WIDTH = 64;
 const DISPLAY_FRAME_HEIGHT = 64;
 const ANIMATION_SPEED = 100;
-
-// Define objects that character should always be above - Move this up!
-const ALWAYS_BELOW_CHARACTER = ["bridge", "path", "water"];
 
 // Character setup
 const character = {
@@ -43,6 +40,12 @@ const animations = {
 const characterElement = document.getElementById("character");
 characterElement.style.zIndex = 1;
 
+
+// Define different types of objects and their behavior
+const ALWAYS_BELOW_CHARACTER = ["bridge", "path", "water"];
+const BEHIND_BUT_SOLID = ["house", "house2", "cabin"];
+const DYNAMIC_Z_INDEX_OBJECTS = ["tree", "rock"];
+
 // Function to Render Collision Objects
 function renderCollisionObjects() {
   collisionZones.forEach((zone) => {
@@ -57,7 +60,7 @@ function renderCollisionObjects() {
     }px -${zone.sprite.row * FRAME_HEIGHT * 2}px`;
 
     // Set initial z-index based on object type
-    if (ALWAYS_BELOW_CHARACTER.includes(zone.type)) {
+    if (ALWAYS_BELOW_CHARACTER.includes(zone.type) || BEHIND_BUT_SOLID.includes(zone.type)) {
       obj.style.zIndex = 0;
     } else {
       obj.style.zIndex = 1;
@@ -77,12 +80,14 @@ function updateObjectDepth() {
     );
     if (!objectElement) return;
 
-    if (ALWAYS_BELOW_CHARACTER.includes(zone.type)) {
+    // Always below character objects and behind but solid objects
+    if (ALWAYS_BELOW_CHARACTER.includes(zone.type) || BEHIND_BUT_SOLID.includes(zone.type)) {
       objectElement.style.zIndex = 0;
       characterElement.style.zIndex = 1;
       return;
     }
 
+    // Dynamic z-index objects
     const objectMidpoint = zone.y + zone.height / 2;
     const characterRight = character.x + DISPLAY_FRAME_WIDTH;
     const characterLeft = character.x;
@@ -167,51 +172,66 @@ document.addEventListener("keyup", (event) => {
 
 // Add collision checking function
 function checkCollision(newX, newY) {
-  // Create character hitbox (slightly smaller than visual size for better gameplay feel)
+  // Define character hitbox
   const characterHitbox = {
-    x: newX + DISPLAY_FRAME_WIDTH * 0.2, // 20% inset from sides
-    y: newY + DISPLAY_FRAME_HEIGHT * 0.6, // 60% down from top for feet position
-    width: DISPLAY_FRAME_WIDTH * 0.6, // 60% of character width
-    height: DISPLAY_FRAME_HEIGHT * 0.3, // 30% of character height for feet area
+    x: newX + DISPLAY_FRAME_WIDTH * 0.2,
+    y: newY + DISPLAY_FRAME_HEIGHT * 0.6,
+    width: DISPLAY_FRAME_WIDTH * 0.6,
+    height: DISPLAY_FRAME_HEIGHT * 0.3,
   };
 
-  // Check collision with each object
+  // Check collision with static objects
   for (const zone of collisionZones) {
-    // Validate zone object
-    if (!zone || typeof zone.type === 'undefined') {
+    if (!zone || typeof zone.type === "undefined") {
       console.warn("Invalid collision zone encountered:", zone);
-      continue; // Skip this zone
+      continue;
     }
 
-    // Skip collision check for walkable objects
+    // Skip collision check only for ALWAYS_BELOW_CHARACTER objects
     if (ALWAYS_BELOW_CHARACTER.includes(zone.type)) {
       continue;
     }
 
-    // Create object hitbox
-    const objectHitbox = {
-      x: zone.x,
-      y: zone.y,
-      width: zone.width,
-      height: zone.height,
-    };
-
-    // Check for overlap
-    if (
-      characterHitbox.x + characterHitbox.width < objectHitbox.x ||
-      characterHitbox.x > objectHitbox.x + objectHitbox.width ||
-      characterHitbox.y + characterHitbox.height < objectHitbox.y ||
-      characterHitbox.y > objectHitbox.y + objectHitbox.height
-    ) {
-      // No collision
-      continue;
+    // Create object hitbox with special handling for houses
+    let objectHitbox;
+    if (BEHIND_BUT_SOLID.includes(zone.type)) {
+      // Expand collision area for houses
+      objectHitbox = {
+        x: zone.x,
+        y: zone.y + zone.height * 0.7, // Adjust this value to change where collision starts
+        width: zone.width,
+        height: zone.height * 0.4, // Adjust this value to change collision area size
+      };
     } else {
-      // Collision detected
-      return true;
+      // Standard hitbox for other objects
+      objectHitbox = {
+        x: zone.x,
+        y: zone.y,
+        width: zone.width,
+        height: zone.height,
+      };
+    }
+
+    // Check for collision with static object
+    if (
+      characterHitbox.x < objectHitbox.x + objectHitbox.width &&
+      characterHitbox.x + characterHitbox.width > objectHitbox.x &&
+      characterHitbox.y < objectHitbox.y + objectHitbox.height &&
+      characterHitbox.y + characterHitbox.height > objectHitbox.y
+    ) {
+      return true; // Collision detected with static object
     }
   }
 
-  return false; // No collision with any zones
+  // Check collision with Orc1
+  if (checkCollisionWithOrc1(characterHitbox)) {
+    console.log("Collision detected with Orc1!");
+    // Handle Orc1-specific collision (e.g., initiate combat)
+    initiateCombatWithOrc1();
+    return true; // Collision detected
+  }
+
+  return false; // No collision
 }
 
 
@@ -302,32 +322,6 @@ function gameLoop(timestamp) {
     isFirstMove = true;
   }
 }
-
-// Optional: Add visual debugging for hitboxes (uncomment to use)
-/*
-function renderHitbox(x, y, width, height, color) {
-  const hitbox = document.createElement('div');
-  hitbox.style.position = 'absolute';
-  hitbox.style.left = `${x}px`;
-  hitbox.style.top = `${y}px`;
-  hitbox.style.width = `${width}px`;
-  hitbox.style.height = `${height}px`;
-  hitbox.style.border = `1px solid ${color}`;
-  hitbox.style.pointerEvents = 'none';
-  hitbox.style.zIndex = '999';
-  gameContainer.appendChild(hitbox);
-  return hitbox;
-}
-
-// Usage in updateCharacterPosition:
-const characterHitbox = {
-  x: character.x + DISPLAY_FRAME_WIDTH * 0.2,
-  y: character.y + DISPLAY_FRAME_HEIGHT * 0.6,
-  width: DISPLAY_FRAME_WIDTH * 0.6,
-  height: DISPLAY_FRAME_HEIGHT * 0.3
-};
-renderHitbox(characterHitbox.x, characterHitbox.y, characterHitbox.width, characterHitbox.height, 'red');
-*/
 
 // Update the stopCharacterAnimation function to reset the first move flag
 function stopCharacterAnimation() {
