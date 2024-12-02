@@ -8,10 +8,10 @@ if (!orc1Element) {
 const orc1 = {
   x: 770,
   y: 100,
-  width: 65,
-  height: 80,
+  width: 96, // Match CSS width
+  height: 96, // Match CSS height
   isInCombat: false,
-  facing: "front", // Default facing front
+  facing: "front",
   currentAction: "idle",
 };
 
@@ -163,13 +163,13 @@ function initiateCombatWithOrc1(characterHitbox) {
 
 // Function to check collision between character and Orc1
 function checkCollisionWithOrc1(characterHitbox) {
-  const hitboxMargin = 10; // Adjust this value to make the collision area smaller or larger
+  const hitboxMargin = 18; // Adjust this value to make the collision area smaller or larger
 
   const orc1Hitbox = {
     x: orc1.x + hitboxMargin,
     y: orc1.y + hitboxMargin,
-    width: orc1.width - hitboxMargin * 2,
-    height: orc1.height - hitboxMargin * 2,
+    width: orc1.width - hitboxMargin * 3,
+    height: orc1.height - hitboxMargin * 1,
   };
 
   return (
