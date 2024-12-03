@@ -1,5 +1,19 @@
+import { nodes, displayNode } from "./story.js";
+import { collisionZones } from "./objects.js";
+import { checkCollisionWithOrc1, initiateCombatWithOrc1, animateOrc1 } from "./enemies.js";
+
 // Game state
 let gameStarted = false;
+export let gamePaused = false;
+
+// Functions to pause and resume the game
+export function pauseGame() {
+  gamePaused = true;
+}
+
+export function resumeGame() {
+  gamePaused = false;
+}
 
 // Get DOM elements
 const startMenu = document.getElementById("start-menu");
@@ -14,6 +28,8 @@ function startGame() {
   gameContainer.style.display = "block";
   // Initialize game
   requestAnimationFrame(gameLoop);
+  // Start the story from the 'start' node
+  displayNode("start");
 }
 
 // Event listeners for menu buttons
@@ -22,13 +38,6 @@ howToPlayBtn.addEventListener("click", () => {
   // Use your existing modal
   modal.classList.remove("hidden");
 });
-
-import { collisionZones } from "./objects.js";
-import {
-  checkCollisionWithOrc1,
-  initiateCombatWithOrc1,
-  animateOrc1,
-} from "./enemies.js";
 
 
 // Game area dimensions
@@ -110,6 +119,7 @@ function completeAttackAnimation() {
 
 // Add F key listener for attacks
 document.addEventListener("keydown", (event) => {
+  if (gamePaused) return;
   if (event.key.toLowerCase() === "f" && !character.isAttacking) {
     startAttackAnimation();
     // Start the game loop for attack animation
@@ -273,7 +283,7 @@ function checkCollision(newX, newY) {
   // Check collision with static objects
   for (const zone of collisionZones) {
     if (!zone || typeof zone.type === "undefined") {
-      console.warn("Invalid collision zone encountered:", zone);
+      //console.warn("Invalid collision zone encountered:", zone);
       continue;
     }
 
@@ -332,111 +342,117 @@ let isFirstMove = true; // Add this flag to handle first movement
 
 function gameLoop(timestamp) {
   if (!gameStarted) return;
+
   if (!lastTime) lastTime = timestamp;
   const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
   lastTime = timestamp;
 
-  // Handle attack animation
-  if (character.isAttacking) {
-    animationTimer += deltaTime * 1000;
-    if (animationTimer >= ANIMATION_SPEED) {
-      animationTimer = 0;
-      character.currentFrame++;
+  // Only run the game logic if the game is not paused
+  if (!gamePaused) {
+    // Handle attack animation
+    if (character.isAttacking) {
+      animationTimer += deltaTime * 1000;
+      if (animationTimer >= ANIMATION_SPEED) {
+        animationTimer = 0;
+        character.currentFrame++;
 
-      if (character.currentFrame >= animations[character.direction].frames) {
-        completeAttackAnimation();
-      } else {
-        updateCharacterPosition();
+        if (character.currentFrame >= animations[character.direction].frames) {
+          completeAttackAnimation();
+        } else {
+          updateCharacterPosition();
+        }
       }
+
+      // Call animateOrc1 with updated character position
+      animateOrc1(timestamp, character.x, character.y);
+
+      // We can return here if we want to skip the rest of the game logic
+      // However, since movement is prevented during attacking, it's safe to proceed
+    } else {
+      let moved = false;
+      let newDirection = character.direction;
+
+      // Calculate movement vector
+      let dx = 0;
+      let dy = 0;
+
+      // Check which keys are pressed
+      if (keysPressed["ArrowUp"]) {
+        dy -= 1;
+        newDirection = "up";
+        moved = true;
+      }
+      if (keysPressed["ArrowDown"]) {
+        dy += 1;
+        newDirection = "down";
+        moved = true;
+      }
+      if (keysPressed["ArrowLeft"]) {
+        dx -= 1;
+        newDirection = "left";
+        moved = true;
+      }
+      if (keysPressed["ArrowRight"]) {
+        dx += 1;
+        newDirection = "right";
+        moved = true;
+      }
+
+      // Apply movement with collision check
+      if (moved) {
+        const newX = character.x + dx * character.speed * deltaTime;
+        const newY = character.y + dy * character.speed * deltaTime;
+
+        // First check game bounds
+        const boundedX = Math.max(
+          0,
+          Math.min(gameWidth - DISPLAY_FRAME_WIDTH, newX)
+        );
+        const boundedY = Math.max(
+          0,
+          Math.min(gameHeight - DISPLAY_FRAME_HEIGHT, newY)
+        );
+
+        // Then check object collisions
+        if (!checkCollision(boundedX, boundedY)) {
+          character.x = boundedX;
+          character.y = boundedY;
+        }
+
+        if (character.direction !== newDirection) {
+          character.direction = newDirection;
+          character.currentFrame = 0;
+        }
+        updateCharacterPosition();
+      } else {
+        if (!character.direction.startsWith("idle-")) {
+          character.direction = `idle-${character.direction}`;
+          character.currentFrame = 0;
+          updateCharacterPosition();
+        }
+      }
+
+      // Handle animation frame updates
+      const animation = animations[character.direction];
+      if (animation && animation.frames > 1) {
+        animationTimer += deltaTime * 1000;
+        if (animationTimer >= ANIMATION_SPEED) {
+          animationTimer = 0;
+          character.currentFrame =
+            (character.currentFrame + 1) % animation.frames;
+          updateCharacterPosition();
+        }
+      }
+
+      // Call animateOrc1 with updated character position
+      animateOrc1(timestamp, character.x, character.y);
     }
-
-    // Call animateOrc1 with updated character position
-    animateOrc1(timestamp, character.x, character.y);
-
-    requestAnimationFrame(gameLoop);
-    return;
   }
 
-  let moved = false;
-  let newDirection = character.direction;
-
-  // Calculate movement vector
-  let dx = 0;
-  let dy = 0;
-
-  // Check which keys are pressed
-  if (keysPressed["ArrowUp"]) {
-    dy -= 1;
-    newDirection = "up";
-    moved = true;
-  }
-  if (keysPressed["ArrowDown"]) {
-    dy += 1;
-    newDirection = "down";
-    moved = true;
-  }
-  if (keysPressed["ArrowLeft"]) {
-    dx -= 1;
-    newDirection = "left";
-    moved = true;
-  }
-  if (keysPressed["ArrowRight"]) {
-    dx += 1;
-    newDirection = "right";
-    moved = true;
-  }
-
-  // Apply movement with collision check
-  if (moved) {
-    const newX = character.x + dx * character.speed * deltaTime;
-    const newY = character.y + dy * character.speed * deltaTime;
-
-    // First check game bounds
-    const boundedX = Math.max(
-      0,
-      Math.min(gameWidth - DISPLAY_FRAME_WIDTH, newX)
-    );
-    const boundedY = Math.max(
-      0,
-      Math.min(gameHeight - DISPLAY_FRAME_HEIGHT, newY)
-    );
-
-    // Then check object collisions
-    if (!checkCollision(boundedX, boundedY)) {
-      character.x = boundedX;
-      character.y = boundedY;
-    }
-
-    if (character.direction !== newDirection) {
-      character.direction = newDirection;
-      character.currentFrame = 0;
-    }
-    updateCharacterPosition();
-  } else {
-    if (!character.direction.startsWith("idle-")) {
-      character.direction = `idle-${character.direction}`;
-      character.currentFrame = 0;
-      updateCharacterPosition();
-    }
-  }
-
-  // Handle animation frame updates
-  const animation = animations[character.direction];
-  if (animation && animation.frames > 1) {
-    animationTimer += deltaTime * 1000;
-    if (animationTimer >= ANIMATION_SPEED) {
-      animationTimer = 0;
-      character.currentFrame = (character.currentFrame + 1) % animation.frames;
-      updateCharacterPosition();
-    }
-  }
-
-  // **Call animateOrc1 with updated character position**
-  animateOrc1(timestamp, character.x, character.y);
-
-  // Continue the game loop
+  // Always request the next frame, regardless of gamePaused state
   requestAnimationFrame(gameLoop);
 }
+
 
 // Start the game loop
 requestAnimationFrame(gameLoop);

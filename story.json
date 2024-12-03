@@ -1,0 +1,21 @@
+nodes["forestEntrance"] = {
+  id: "forestEntrance",
+  title: "Forest Entrance",
+  description: "The trees tower above you...",
+  choices: [
+    { name: "Follow the path", node: "deepForest" },
+    { name: "Climb a tree", node: "treeTop" },
+  ],
+};
+
+nodes["village"] = {
+  id: "village",
+  title: "Quiet Village",
+  description: "The village is eerily quiet...",
+  choices: [
+    { name: "Explore the houses", node: "houses" },
+    { name: "Sit in the square", node: "square" },
+  ],
+};
+
+// Continue adding all other nodes...
