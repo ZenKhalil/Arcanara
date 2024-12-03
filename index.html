@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
+    <!-- Pixel Font Import -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"> 
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -22,7 +24,6 @@
                     <li><a href="#"><i class="fas fa-info-circle"></i> About</a></li>
                     <li><a href="#"><i class="fas fa-trophy"></i> Leaderboard</a></li>
                     <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
-                    <li><a href="#" id="open-modal"><i class="fas fa-question-circle"></i> Help</a></li>
                     <li>
                         <button id="dark-mode-toggle" aria-label="Toggle Dark Mode">
                             <i class="fas fa-moon"></i>
@@ -41,6 +42,31 @@
 
     <!-- Main Game Section -->
     <main>
+        <div id="start-menu" class="overlay">
+        <div class="menu-content">
+            <div class="pixel-corner pixel-corner-tl"></div>
+            <div class="pixel-corner pixel-corner-tr"></div>
+            <div class="pixel-corner pixel-corner-bl"></div>
+            <div class="pixel-corner pixel-corner-br"></div>
+            <h2>ARCANARA</h2>
+            <p>A Magical Adventure Awaits</p>
+            <button id="start-game" class="menu-button">START GAME</button>
+            <button id="how-to-play" class="menu-button">HOW TO PLAY</button>
+        </div>
+    </div>
+     <!-- Modal Structure -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="pixel-corner pixel-corner-tl"></div>
+            <div class="pixel-corner pixel-corner-tr"></div>
+            <div class="pixel-corner pixel-corner-bl"></div>
+            <div class="pixel-corner pixel-corner-br"></div>
+            <span class="close-button">×</span>
+            <h2>Welcome to Arcanara!</h2>
+            <p>Use the <img src="./images/arrowkeys.png" alt="Arrow keys" style="vertical-align: middle; width: 40px; height: auto;"> to navigate your character through the magical realm.</p>            <p>Press <strong>F</strong> to attack enemies and defend yourself!</p>
+            <p>Explore the world, avoid obstacles, and discover hidden treasures.</p>
+        </div>
+    </div>
         <div id="game-container">
             <div id="character"></div>
             <div id="orc1"></div>

@@ -1,3 +1,28 @@
+// Game state
+let gameStarted = false;
+
+// Get DOM elements
+const startMenu = document.getElementById("start-menu");
+const startGameBtn = document.getElementById("start-game");
+const howToPlayBtn = document.getElementById("how-to-play");
+const gameContainer = document.getElementById("game-container");
+
+// Start game function
+function startGame() {
+  gameStarted = true;
+  startMenu.style.display = "none";
+  gameContainer.style.display = "block";
+  // Initialize game
+  requestAnimationFrame(gameLoop);
+}
+
+// Event listeners for menu buttons
+startGameBtn.addEventListener("click", startGame);
+howToPlayBtn.addEventListener("click", () => {
+  // Use your existing modal
+  modal.classList.remove("hidden");
+});
+
 import { collisionZones } from "./objects.js";
 import {
   checkCollisionWithOrc1,
@@ -5,7 +30,6 @@ import {
   animateOrc1,
 } from "./enemies.js";
 
-const gameContainer = document.getElementById("game-container");
 
 // Game area dimensions
 const gameWidth = 1118;
@@ -120,7 +144,10 @@ function renderCollisionObjects() {
     }px -${zone.sprite.row * FRAME_HEIGHT * 2}px`;
 
     // Set initial z-index based on object type
-    if (ALWAYS_BELOW_CHARACTER.includes(zone.type) || BEHIND_BUT_SOLID.includes(zone.type)) {
+    if (
+      ALWAYS_BELOW_CHARACTER.includes(zone.type) ||
+      BEHIND_BUT_SOLID.includes(zone.type)
+    ) {
       obj.style.zIndex = 0;
     } else {
       obj.style.zIndex = 1;
@@ -141,7 +168,10 @@ function updateObjectDepth() {
     if (!objectElement) return;
 
     // Always below character objects and behind but solid objects
-    if (ALWAYS_BELOW_CHARACTER.includes(zone.type) || BEHIND_BUT_SOLID.includes(zone.type)) {
+    if (
+      ALWAYS_BELOW_CHARACTER.includes(zone.type) ||
+      BEHIND_BUT_SOLID.includes(zone.type)
+    ) {
       objectElement.style.zIndex = 0;
       characterElement.style.zIndex = 1;
       return;
@@ -295,13 +325,13 @@ function checkCollision(newX, newY) {
   return false; // No collision
 }
 
-
 // Variables for animation timing
 let lastTime = null;
 let animationTimer = 0;
 let isFirstMove = true; // Add this flag to handle first movement
 
 function gameLoop(timestamp) {
+  if (!gameStarted) return;
   if (!lastTime) lastTime = timestamp;
   const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
   lastTime = timestamp;
@@ -414,7 +444,7 @@ requestAnimationFrame(gameLoop);
 // Update stopCharacterAnimation to check for attacking
 function stopCharacterAnimation() {
   if (character.isAttacking) return; // Don't stop if attacking
-  
+
   character.isMoving = false;
   isFirstMove = true;
   if (!character.direction.startsWith("idle-")) {
@@ -429,7 +459,7 @@ updateCharacterPosition();
 
 // Modal Functionality
 const modal = document.getElementById("modal");
-const openModalBtn = document.getElementById("open-modal");
+const openModalBtn = document.getElementById("how-to-play");
 const closeModalBtn = document.querySelector(".close-button");
 
 // Function to open modal
