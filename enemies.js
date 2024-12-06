@@ -1,5 +1,6 @@
 import { handlePlayerHit, isGameOverState } from "./combat.js";
 
+
 // Select orc1 element
 const orc1Element = document.getElementById("orc1");
 if (!orc1Element) {
@@ -336,37 +337,6 @@ function updateOrc1Position(newX, newY) {
 
 if (orc1Element) {
   requestAnimationFrame(animateOrc1);
-}
-
-function renderCollisionObjects() {
-  collisionZones.forEach((zone) => {
-    const obj = document.createElement("div");
-    obj.classList.add("collision-object", zone.type);
-    obj.style.left = `${zone.x}px`;
-    obj.style.top = `${zone.y}px`;
-    obj.style.width = `${zone.width}px`;
-    obj.style.height = `${zone.height}px`;
-    obj.style.backgroundPosition = `-${
-      zone.sprite.column * FRAME_WIDTH * 2
-    }px -${zone.sprite.row * FRAME_HEIGHT * 2}px`;
-
-    // Set initial z-index based on object type
-    if (
-      ALWAYS_BELOW_CHARACTER.includes(zone.type) ||
-      BEHIND_BUT_SOLID.includes(zone.type)
-    ) {
-      obj.style.zIndex = 0;
-    } else {
-      obj.style.zIndex = 1;
-    }
-
-    // Hide open chest initially
-    if (zone.type === "openChest") {
-      obj.style.display = "none";
-    }
-
-    gameContainer.appendChild(obj);
-  });
 }
 
 export {

@@ -217,9 +217,15 @@ function renderCollisionObjects() {
       obj.style.zIndex = 1;
     }
 
+    // Hide open chest initially
+    if (zone.type === "openChest") {
+      obj.style.display = "none";
+    }
+
     gameContainer.appendChild(obj);
   });
 }
+
 
 // Function to check if character is above or below an object's midpoint
 function updateObjectDepth() {

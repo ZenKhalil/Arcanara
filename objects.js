@@ -5,7 +5,7 @@ export const collisionZones = [
     width: 128,
     height: 96,
     type: "house",
-    sprite: { row: 0, column: 1.65 }, 
+    sprite: { row: 0, column: 1.65 },
   },
   {
     x: 920,
@@ -21,7 +21,7 @@ export const collisionZones = [
     width: 55,
     height: 87,
     type: "tree1",
-    sprite: { row: 1.5, column: 0.98 }, 
+    sprite: { row: 1.5, column: 0.98 },
   },
   {
     x: 214,
@@ -29,7 +29,7 @@ export const collisionZones = [
     width: 55,
     height: 87,
     type: "tree1",
-    sprite: { row: 1.5, column: 0.98 }, 
+    sprite: { row: 1.5, column: 0.98 },
   },
   {
     x: 19,
@@ -45,7 +45,7 @@ export const collisionZones = [
     width: 55,
     height: 87,
     type: "tree2",
-    sprite: { row: 1.5, column: 0 }, 
+    sprite: { row: 1.5, column: 0 },
   },
   {
     x: 503,
@@ -53,7 +53,7 @@ export const collisionZones = [
     width: 90,
     height: 90,
     type: "bridge",
-    sprite: { row: 2.8, column: 0 }, 
+    sprite: { row: 2.8, column: 0 },
   },
   {
     x: 640,
@@ -61,7 +61,7 @@ export const collisionZones = [
     width: 90,
     height: 96,
     type: "cabin",
-    sprite: { row: 0, column: 0.18 }, 
+    sprite: { row: 0, column: 0.18 },
   },
   {
     x: 740,
@@ -69,7 +69,7 @@ export const collisionZones = [
     width: 23,
     height: 35,
     type: "woodpile",
-    sprite: { row: 2.5, column: 1.96 }, 
+    sprite: { row: 2.5, column: 1.96 },
   },
   {
     x: 780,
@@ -77,7 +77,7 @@ export const collisionZones = [
     width: 21,
     height: 30,
     type: "openChest",
-    sprite: { row: 2.1, column: 2.46 }, 
+    sprite: { row: 2.1, column: 2.46 },
   },
   {
     x: 780,
@@ -85,7 +85,7 @@ export const collisionZones = [
     width: 21,
     height: 30,
     type: "closedChest",
-    sprite: { row: 2.1, column: 1.96 }, 
+    sprite: { row: 2.1, column: 1.96 },
   },
   /*{
     x: 350,
@@ -125,7 +125,7 @@ export const collisionZones = [
     width: 28,
     height: 30,
     type: "roadsign",
-    sprite: { row: 2.07, column: 3.416 }, 
+    sprite: { row: 2.07, column: 3.416 },
   },
   {
     x: 94,
@@ -133,7 +133,7 @@ export const collisionZones = [
     width: 19,
     height: 18,
     type: "rock",
-    sprite: { row: 2.25, column: 2.97 }, 
+    sprite: { row: 2.25, column: 2.97 },
   },
   ,
   {
@@ -142,6 +142,6 @@ export const collisionZones = [
     width: 19,
     height: 18,
     type: "rock1",
-    sprite: { row: 2.25, column: 2.97 }, 
+    sprite: { row: 2.25, column: 2.97 },
   },
 ];
