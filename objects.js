@@ -71,14 +71,14 @@ export const collisionZones = [
     type: "woodpile",
     sprite: { row: 2.5, column: 1.96 }, 
   },
-  /*{
+  {
     x: 780,
     y: 70,
     width: 21,
     height: 30,
     type: "openChest",
     sprite: { row: 2.1, column: 2.46 }, 
-  },*/
+  },
   {
     x: 780,
     y: 70,
