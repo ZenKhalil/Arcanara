@@ -1,5 +1,72 @@
 import { pauseGame, resumeGame } from "./script.js";
 
+// Audio management for different areas with dual audio instances for seamless playback
+const backgroundSounds = {
+  forest: {
+    current: new Audio("/BackgroundSound/ForestSound.mp3"),
+    next: new Audio("/BackgroundSound/ForestSound.mp3"),
+  },
+  village: {
+    current: new Audio("/BackgroundSound/VillageSound.mp3"),
+    next: new Audio("/BackgroundSound/VillageSound.mp3"),
+  },
+};
+
+// Configure all audio elements
+Object.entries(backgroundSounds).forEach(([_, sounds]) => {
+  sounds.current.loop = false;
+  sounds.next.loop = false;
+  sounds.current.volume = 0.5;
+  sounds.next.volume = 0.5;
+});
+
+let currentArea = null;
+let isPlaying = false;
+
+
+
+export function playAreaSound(area) {
+  // Don't start playing if we're already playing this area's sound
+  if (currentArea === area && isPlaying) return;
+
+  // Stop current sounds if playing
+  if (currentArea) {
+    const currentSounds = backgroundSounds[currentArea];
+    currentSounds.current.pause();
+    currentSounds.next.pause();
+    currentSounds.current.currentTime = 0;
+    currentSounds.next.currentTime = 0;
+  }
+
+  currentArea = area;
+  isPlaying = true;
+
+  const newSounds = backgroundSounds[area];
+  setupSeamlessPlayback(area);
+
+  try {
+    newSounds.current.play().catch((e) => {
+      console.error("Audio playback failed:", e);
+      isPlaying = false;
+    });
+  } catch (e) {
+    console.error("Audio playback error:", e);
+    isPlaying = false;
+  }
+}
+
+export function stopCurrentSound() {
+  if (currentArea) {
+    const sounds = backgroundSounds[currentArea];
+    sounds.current.pause();
+    sounds.next.pause();
+    sounds.current.currentTime = 0;
+    sounds.next.currentTime = 0;
+    isPlaying = false;
+    currentArea = null;
+  }
+}
+
 // Story nodes
 export const nodes = {
   start: {
@@ -40,6 +107,11 @@ export const nodes = {
 export function displayNode(nodeId) {
   const node = nodes[nodeId];
   pauseGame();
+
+  // Stop sounds if returning to start
+  if (nodeId === "start") {
+    stopCurrentSound();
+  }
 
   const storyContainer = document.getElementById("story-container");
   storyContainer.innerHTML = "";
@@ -104,10 +176,14 @@ export function displayNode(nodeId) {
           storyContainer
             .querySelectorAll("button")
             .forEach((btn) => (btn.disabled = true));
+
+          // Play sound only after choice is made
           if (choice.node === "forestEntrance") {
+            playAreaSound("forest");
             storyContainer.style.display = "none";
             resumeGame();
-          } else {
+          } else if (choice.node === "village") {
+            playAreaSound("village");
             displayNode(choice.node);
           }
         });
@@ -140,5 +216,12 @@ export function displayNode(nodeId) {
     });
 
     buttonContainer.appendChild(continueButton);
+  }
+}
+
+// Handle sound resumption
+export function handleGameResume() {
+  if (currentArea && !isPlaying) {
+    playAreaSound(currentArea);
   }
 }
