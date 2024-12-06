@@ -7,8 +7,21 @@ if (!orc1Element) {
 }
 
 // Constants for dimensions
-const DISPLAY_FRAME_WIDTH = 64; // Added this
-const DISPLAY_FRAME_HEIGHT = 64; // Added this
+const DISPLAY_FRAME_WIDTH = 64;
+const DISPLAY_FRAME_HEIGHT = 64;
+
+// Animation parameters
+const ORC1_IDLE_COLS = 4;
+const ORC1_ATTACK_COLS = 4;
+const ORC1_FRAME_WIDTH = 96;
+const ORC1_FRAME_HEIGHT = 96;
+const ORC1_ANIMATION_SPEED = 200;
+const ORC1_ATTACK_SPEED = 150;
+
+const IDLE_SHEET_WIDTH = 384;
+const IDLE_SHEET_HEIGHT = 384;
+const ATTACK_SHEET_WIDTH = 768;
+const ATTACK_SHEET_HEIGHT = 384;
 
 // Orc1 setup
 const orc1 = {
@@ -26,19 +39,6 @@ const orc1 = {
   isDead: false,
 };
 
-// Animation parameters
-const ORC1_IDLE_COLS = 4;
-const ORC1_ATTACK_COLS = 4;
-const ORC1_FRAME_WIDTH = 96;
-const ORC1_FRAME_HEIGHT = 96;
-const ORC1_ANIMATION_SPEED = 200;
-const ORC1_ATTACK_SPEED = 150;
-
-const IDLE_SHEET_WIDTH = 384;
-const IDLE_SHEET_HEIGHT = 384;
-const ATTACK_SHEET_WIDTH = 768;
-const ATTACK_SHEET_HEIGHT = 384;
-
 let orc1CurrentFrame = 0;
 let orc1LastFrameChange = 0;
 
@@ -54,7 +54,6 @@ function handleOrcHit() {
   orc1.health--;
   console.log("Orc hit! Health remaining:", orc1.health);
 
-  // Visual feedback
   if (orc1Element) {
     orc1Element.style.animation = "damage-flash 0.5s";
     setTimeout(() => {
@@ -317,7 +316,7 @@ function updateOrc1Position(newX, newY) {
   }
 }
 
-export function checkPlayerAttackHit(playerHitbox) {
+ function checkPlayerAttackHit(playerHitbox) {
   if (orc1.isDead) return false;
 
   const orcHitbox = {
@@ -376,4 +375,5 @@ export {
   animateOrc1,
   updateOrc1Position,
   handleOrcHit,
+  checkPlayerAttackHit,
 };
