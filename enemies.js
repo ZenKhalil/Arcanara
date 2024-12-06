@@ -6,6 +6,10 @@ if (!orc1Element) {
   console.error("Orc1 element not found!");
 }
 
+// Constants for dimensions
+const DISPLAY_FRAME_WIDTH = 64; // Added this
+const DISPLAY_FRAME_HEIGHT = 64; // Added this
+
 // Orc1 setup
 const orc1 = {
   x: 770,
@@ -16,13 +20,13 @@ const orc1 = {
   facing: "front",
   currentAction: "idle",
   lastAttackTime: 0,
-  attackCooldown: 800, // Reduced from 1000 to make attacks more frequent
+  attackCooldown: 800,
   isAttacking: false,
   health: 3,
   isDead: false,
 };
 
-// Animation parameters [keep existing constants]
+// Animation parameters
 const ORC1_IDLE_COLS = 4;
 const ORC1_ATTACK_COLS = 4;
 const ORC1_FRAME_WIDTH = 96;
@@ -44,8 +48,7 @@ if (orc1Element) {
   orc1Element.style.top = `${orc1.y}px`;
 }
 
-// Add function to handle orc getting hit
- function handleOrcHit() {
+function handleOrcHit() {
   if (orc1.isDead) return;
 
   orc1.health--;
@@ -64,6 +67,15 @@ if (orc1Element) {
     orc1.currentAction = "idle";
     console.log("Orc defeated!");
 
+    // Handle chest transition
+    const closedChest = document.querySelector(".collision-object.closedChest");
+    const openChest = document.querySelector(".collision-object.openChest");
+
+    if (closedChest && openChest) {
+      closedChest.style.display = "none";
+      openChest.style.display = "block";
+    }
+
     // Create and show victory alert
     const victoryAlert = document.createElement("div");
     victoryAlert.className = "modal";
@@ -71,6 +83,7 @@ if (orc1Element) {
       <div class="modal-content">
         <h2>Victory!</h2>
         <p>You have defeated the orc!</p>
+        <p>The chest is now accessible!</p>
         <button class="menu-button" onclick="this.parentElement.parentElement.remove()">Continue</button>
       </div>
     `;
@@ -84,7 +97,7 @@ if (orc1Element) {
 }
 
 function updateOrc1Direction(characterX, characterY) {
-  if (orc1.isDead) return; // Don't update if dead
+  if (orc1.isDead) return;
 
   const DIRECTION_CHANGE_RANGE = 150;
   const distanceX = characterX - orc1.x;
@@ -104,7 +117,6 @@ function updateOrc1Direction(characterX, characterY) {
   }
 }
 
-// [keep getDirectionRow function the same]
 function getDirectionRow() {
   switch (orc1.facing) {
     case "front":
@@ -127,7 +139,7 @@ function checkAttackHit(characterHitbox) {
     orc1.currentAction === "attack" &&
     (orc1CurrentFrame === 1 || orc1CurrentFrame === 2)
   ) {
-    const attackRange = 50; // Increased from 40 to make attacks slightly more dangerous
+    const attackRange = 50;
     let attackHitbox = {
       x: orc1.x,
       y: orc1.y,
@@ -135,11 +147,10 @@ function checkAttackHit(characterHitbox) {
       height: orc1.height,
     };
 
-    // Adjust hitbox based on facing direction with improved ranges
     switch (orc1.facing) {
       case "left":
         attackHitbox.x -= attackRange;
-        attackHitbox.width += attackRange * 0.7; // Slightly reduced side attack width
+        attackHitbox.width += attackRange * 0.7;
         break;
       case "right":
         attackHitbox.width += attackRange * 0.7;
@@ -157,7 +168,7 @@ function checkAttackHit(characterHitbox) {
   }
   return false;
 }
-// [keep checkCollision function the same]
+
 function checkCollision(box1, box2) {
   return (
     box1.x < box2.x + box2.width &&
@@ -174,7 +185,6 @@ function animateOrc1(timestamp, characterX, characterY) {
     orc1LastFrameChange = timestamp;
   }
 
-  // Create character hitbox for combat checks
   const characterHitbox = {
     x: characterX + DISPLAY_FRAME_WIDTH * 0.2,
     y: characterY + DISPLAY_FRAME_HEIGHT * 0.6,
@@ -182,7 +192,6 @@ function animateOrc1(timestamp, characterX, characterY) {
     height: DISPLAY_FRAME_HEIGHT * 0.3,
   };
 
-  // Always check for combat, regardless of player movement
   initiateCombatWithOrc1(characterHitbox);
   updateOrc1Direction(characterX, characterY);
 
@@ -195,11 +204,9 @@ function animateOrc1(timestamp, characterX, characterY) {
       orc1.currentAction === "attack" ? ORC1_ATTACK_COLS : ORC1_IDLE_COLS;
     orc1CurrentFrame = (orc1CurrentFrame + 1) % maxFrames;
 
-    // If we complete an attack animation, reset to idle
     if (orc1.currentAction === "attack" && orc1CurrentFrame === 0) {
       orc1.isAttacking = false;
       orc1.currentAction = "idle";
-      // Immediately check if we should start another attack
       if (orc1.isInCombat) {
         const currentTime = Date.now();
         if (currentTime - orc1.lastAttackTime >= orc1.attackCooldown) {
@@ -224,7 +231,6 @@ function animateOrc1(timestamp, characterX, characterY) {
         orc1CurrentFrame * scaledFrameWidth
       }px -${yOffset}px`;
 
-      // Check for hits during attack frames
       if (
         (orc1CurrentFrame === 1 || orc1CurrentFrame === 2) &&
         orc1.isAttacking
@@ -247,7 +253,6 @@ function animateOrc1(timestamp, characterX, characterY) {
   }
 }
 
-
 function initiateCombatWithOrc1(characterHitbox) {
   if (isGameOverState() || orc1.isDead) return false;
 
@@ -266,7 +271,6 @@ function initiateCombatWithOrc1(characterHitbox) {
       console.log("Entering combat");
     }
 
-    // Start attack if not attacking and cooldown has passed
     if (
       !orc1.isAttacking &&
       currentTime - orc1.lastAttackTime >= orc1.attackCooldown
@@ -289,10 +293,8 @@ function initiateCombatWithOrc1(characterHitbox) {
   }
 }
 
-
-// [keep other functions the same]
 function checkCollisionWithOrc1(characterHitbox) {
-  if (orc1.isDead) return false; // Don't collide if dead
+  if (orc1.isDead) return false;
 
   const orc1Hitbox = {
     x: orc1.x + orc1.width * 0.2,
@@ -305,7 +307,7 @@ function checkCollisionWithOrc1(characterHitbox) {
 }
 
 function updateOrc1Position(newX, newY) {
-  if (orc1.isDead) return; // Don't update if dead
+  if (orc1.isDead) return;
 
   orc1.x = newX;
   orc1.y = newY;
@@ -315,19 +317,6 @@ function updateOrc1Position(newX, newY) {
   }
 }
 
-if (orc1Element) {
-  requestAnimationFrame(animateOrc1);
-}
-
-export {
-  checkCollisionWithOrc1,
-  initiateCombatWithOrc1,
-  animateOrc1,
-  updateOrc1Position,
-  handleOrcHit, // Add this export
-};
-
-// And add this function to check player attacks against orc:
 export function checkPlayerAttackHit(playerHitbox) {
   if (orc1.isDead) return false;
 
@@ -345,3 +334,46 @@ export function checkPlayerAttackHit(playerHitbox) {
   }
   return hit;
 }
+
+if (orc1Element) {
+  requestAnimationFrame(animateOrc1);
+}
+
+function renderCollisionObjects() {
+  collisionZones.forEach((zone) => {
+    const obj = document.createElement("div");
+    obj.classList.add("collision-object", zone.type);
+    obj.style.left = `${zone.x}px`;
+    obj.style.top = `${zone.y}px`;
+    obj.style.width = `${zone.width}px`;
+    obj.style.height = `${zone.height}px`;
+    obj.style.backgroundPosition = `-${
+      zone.sprite.column * FRAME_WIDTH * 2
+    }px -${zone.sprite.row * FRAME_HEIGHT * 2}px`;
+
+    // Set initial z-index based on object type
+    if (
+      ALWAYS_BELOW_CHARACTER.includes(zone.type) ||
+      BEHIND_BUT_SOLID.includes(zone.type)
+    ) {
+      obj.style.zIndex = 0;
+    } else {
+      obj.style.zIndex = 1;
+    }
+
+    // Hide open chest initially
+    if (zone.type === "openChest") {
+      obj.style.display = "none";
+    }
+
+    gameContainer.appendChild(obj);
+  });
+}
+
+export {
+  checkCollisionWithOrc1,
+  initiateCombatWithOrc1,
+  animateOrc1,
+  updateOrc1Position,
+  handleOrcHit,
+};
