@@ -1,51 +1,35 @@
 import { pauseGame, resumeGame } from "./script.js";
 
-// Audio management for different areas with dual audio instances for seamless playback
+// Audio management for different areas
 const backgroundSounds = {
-  forest: {
-    current: new Audio("/BackgroundSound/ForestSound.mp3"),
-    next: new Audio("/BackgroundSound/ForestSound.mp3"),
-  },
-  village: {
-    current: new Audio("/BackgroundSound/VillageSound.mp3"),
-    next: new Audio("/BackgroundSound/VillageSound.mp3"),
-  },
+  forest: new Audio("/BackgroundSound/ForestSound.mp3"),
+  village: new Audio("/BackgroundSound/VillageSound.mp3"),
 };
 
 // Configure all audio elements
-Object.entries(backgroundSounds).forEach(([_, sounds]) => {
-  sounds.current.loop = false;
-  sounds.next.loop = false;
-  sounds.current.volume = 0.5;
-  sounds.next.volume = 0.5;
+Object.values(backgroundSounds).forEach((sound) => {
+  sound.loop = true;
+  sound.volume = 0.5;
 });
 
 let currentArea = null;
 let isPlaying = false;
 
-
-
 export function playAreaSound(area) {
   // Don't start playing if we're already playing this area's sound
   if (currentArea === area && isPlaying) return;
 
-  // Stop current sounds if playing
+  // Stop current sound if playing
   if (currentArea) {
-    const currentSounds = backgroundSounds[currentArea];
-    currentSounds.current.pause();
-    currentSounds.next.pause();
-    currentSounds.current.currentTime = 0;
-    currentSounds.next.currentTime = 0;
+    backgroundSounds[currentArea].pause();
+    backgroundSounds[currentArea].currentTime = 0;
   }
 
   currentArea = area;
   isPlaying = true;
 
-  const newSounds = backgroundSounds[area];
-  setupSeamlessPlayback(area);
-
   try {
-    newSounds.current.play().catch((e) => {
+    backgroundSounds[area].play().catch((e) => {
       console.error("Audio playback failed:", e);
       isPlaying = false;
     });
@@ -57,11 +41,8 @@ export function playAreaSound(area) {
 
 export function stopCurrentSound() {
   if (currentArea) {
-    const sounds = backgroundSounds[currentArea];
-    sounds.current.pause();
-    sounds.next.pause();
-    sounds.current.currentTime = 0;
-    sounds.next.currentTime = 0;
+    backgroundSounds[currentArea].pause();
+    backgroundSounds[currentArea].currentTime = 0;
     isPlaying = false;
     currentArea = null;
   }
