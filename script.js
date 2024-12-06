@@ -20,6 +20,60 @@ const startMenu = document.getElementById("start-menu");
 const startGameBtn = document.getElementById("start-game");
 const howToPlayBtn = document.getElementById("how-to-play");
 const gameContainer = document.getElementById("game-container");
+const homeLink = document.querySelector('nav a[href="#"]');
+const aboutLink = document.querySelectorAll('nav a[href="#"]')[1];
+
+// Create about page container
+const aboutContainer = document.createElement("div");
+aboutContainer.id = "about-container";
+aboutContainer.className = "overlay";
+aboutContainer.style.display = "none"; // Set initial display to none
+aboutContainer.innerHTML = `
+  <div class="menu-content">
+    <div class="pixel-corner pixel-corner-tl"></div>
+    <div class="pixel-corner pixel-corner-tr"></div>
+    <div class="pixel-corner pixel-corner-bl"></div>
+    <div class="pixel-corner pixel-corner-br"></div>
+    <h2>About Arcanara</h2>
+    <p>Welcome to Arcanara, a magical realm where adventure awaits at every turn!</p>
+    <p>Navigate through enchanted forests, battle fearsome orcs, and uncover ancient mysteries in this pixel art adventure.</p>
+    <button id="back-to-menu" class="menu-button">BACK TO MENU</button>
+  </div>
+`;
+document.querySelector("main").appendChild(aboutContainer);
+
+// Initialize page state
+gameContainer.style.display = "none";
+startMenu.style.display = "flex";
+
+// Navigation functions
+function showStartMenu() {
+  gameStarted = false;
+  startMenu.style.display = "flex";
+  gameContainer.style.display = "none";
+  aboutContainer.style.display = "none";
+}
+
+function showAboutPage() {
+  startMenu.style.display = "none";
+  gameContainer.style.display = "none";
+  aboutContainer.style.display = "flex";
+}
+
+// Event listeners for navigation
+homeLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  showStartMenu();
+});
+
+aboutLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  showAboutPage();
+});
+
+document
+  .getElementById("back-to-menu")
+  .addEventListener("click", showStartMenu);
 
 // Start game function
 function startGame() {

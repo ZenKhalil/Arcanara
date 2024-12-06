@@ -131,10 +131,10 @@ function animateOrc1(timestamp, characterX, characterY) {
     orc1LastFrameChange = timestamp;
   }
 
-  // Remove the requestAnimationFrame call here
+  // requestAnimationFrame 
 }
 
-// Remove the initial requestAnimationFrame call
+// requestAnimationFrame 
 // Start the orc1 animation
 // if (orc1Element) {
 //   requestAnimationFrame((timestamp) => animateOrc1(timestamp, character.x, character.y));
@@ -163,13 +163,11 @@ function initiateCombatWithOrc1(characterHitbox) {
 
 // Function to check collision between character and Orc1
 function checkCollisionWithOrc1(characterHitbox) {
-  const hitboxMargin = 18; // Adjust this value to make the collision area smaller or larger
-
   const orc1Hitbox = {
-    x: orc1.x + hitboxMargin,
-    y: orc1.y + hitboxMargin,
-    width: orc1.width - hitboxMargin * 3,
-    height: orc1.height - hitboxMargin * 1,
+    x: orc1.x + orc1.width * 0.2, 
+    y: orc1.y + orc1.height * 0.3, 
+    width: orc1.width * 0.6, 
+    height: orc1.height * 0.5, 
   };
 
   return (
@@ -179,7 +177,6 @@ function checkCollisionWithOrc1(characterHitbox) {
     characterHitbox.y + characterHitbox.height > orc1Hitbox.y
   );
 }
-
 
 // Function to update Orc1's position
 function updateOrc1Position(newX, newY) {
