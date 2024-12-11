@@ -1,4 +1,5 @@
-export const collisionZones = [
+// Forest area collision zones
+export const forestCollisionZones = [
   {
     x: 134,
     y: 30,
@@ -145,3 +146,28 @@ export const collisionZones = [
     sprite: { row: 2.25, column: 2.97 },
   },
 ];
+
+// Village area collision zones (create new ones specific to village)
+export const villageCollisionZones = [
+  // Add village-specific objects here
+ /* {
+    x: 200,
+    y: 50,
+    width: 128,
+    height: 96,
+    type: "house",
+    sprite: { row: 0, column: 1.65 },
+  },*/
+  // ... more village objects
+];
+
+// Export area mappings
+export const areaCollisionZones = {
+  forest: forestCollisionZones,
+  village: villageCollisionZones
+};
+
+// Constants for object categories
+export const ALWAYS_BELOW_CHARACTER = ["bridge", "path", "water"];
+export const BEHIND_BUT_SOLID = ["house", "house2", "cabin"];
+export const HIDDEN_OBJECTS = ["openChest"];
