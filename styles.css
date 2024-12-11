@@ -266,17 +266,16 @@ main {
 }
 
 #game-container {
-  width: 1118px; /* Original width of the background image */
-  height: 615px; /* Original height of the background image */
-  background-image: url("images/village-background.png");
-  background-size: cover; /* Fill the container */
+  width: 1118px; 
+  height: 615px; 
+  background-size: cover; 
   background-repeat: no-repeat;
   background-position: center;
-  border: 2px solid #34495e; /* Subtle border */
-  position: relative; /* Changed from absolute to relative */
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-  overflow: hidden; /* Hide overflowing elements */
+  border: 2px solid #34495e; 
+  position: relative; 
+  border-radius: 10px; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  overflow: hidden; 
 }
 
 #character {

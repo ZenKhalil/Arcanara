@@ -1,4 +1,11 @@
-import { pauseGame, resumeGame } from "./script.js";
+import {
+  pauseGame,
+  resumeGame,
+  renderCollisionObjects,
+  gameState,
+} from "./script.js";
+
+import { areaCollisionZones } from "./objects.js";
 
 // Audio management for different areas
 const backgroundSounds = {
@@ -12,20 +19,33 @@ Object.values(backgroundSounds).forEach((sound) => {
   sound.volume = 0.5;
 });
 
-let currentArea = null;
+// Area backgrounds configuration
+const areaBackgrounds = {
+  forest: "/images/forrest-background.png",
+  village: "/images/village-background.png",
+};
+
 let isPlaying = false;
+
+// Function to change game background
+export function setAreaBackground(area) {
+  const gameContainer = document.getElementById("game-container");
+  if (gameContainer && areaBackgrounds[area]) {
+    gameContainer.style.backgroundImage = `url("${areaBackgrounds[area]}")`;
+  }
+}
 
 export function playAreaSound(area) {
   // Don't start playing if we're already playing this area's sound
-  if (currentArea === area && isPlaying) return;
+  if (gameState.currentArea === area && isPlaying) return;
 
   // Stop current sound if playing
-  if (currentArea) {
-    backgroundSounds[currentArea].pause();
-    backgroundSounds[currentArea].currentTime = 0;
+  if (gameState.currentArea) {
+    backgroundSounds[gameState.currentArea].pause();
+    backgroundSounds[gameState.currentArea].currentTime = 0;
   }
 
-  currentArea = area;
+  gameState.currentArea = area;
   isPlaying = true;
 
   try {
@@ -40,11 +60,11 @@ export function playAreaSound(area) {
 }
 
 export function stopCurrentSound() {
-  if (currentArea) {
-    backgroundSounds[currentArea].pause();
-    backgroundSounds[currentArea].currentTime = 0;
+  if (gameState.currentArea) {
+    backgroundSounds[gameState.currentArea].pause();
+    backgroundSounds[gameState.currentArea].currentTime = 0;
     isPlaying = false;
-    currentArea = null;
+    gameState.currentArea = null;
   }
 }
 
@@ -61,11 +81,13 @@ export const nodes = {
         name: "Enter the forest",
         node: "forestEntrance",
         enabled: true,
+        area: "forest",
       },
       {
         name: "Return to the village",
         node: "village",
-        enabled: false,
+        enabled: true, // Now enabled
+        area: "village",
       },
     ],
   },
@@ -74,6 +96,7 @@ export const nodes = {
     title: "Forest Entrance",
     description: "The dense forest beckons. Adventure awaits...",
     choices: [], // Empty choices will trigger game continuation
+    area: "forest",
   },
   village: {
     id: "village",
@@ -81,6 +104,7 @@ export const nodes = {
     description: "The village path leads to a cozy settlement...",
     image: "/images/VillageEntrance.png",
     choices: [], // Empty for now until village implementation
+    area: "village",
   },
 };
 
@@ -158,13 +182,17 @@ export function displayNode(nodeId) {
             .querySelectorAll("button")
             .forEach((btn) => (btn.disabled = true));
 
-          // Play sound only after choice is made
+          // Set background and play sound based on area
+          if (choice.area) {
+            setAreaBackground(choice.area);
+            playAreaSound(choice.area);
+            switchAreaObjects(choice.area); // Added this line for area objects
+          }
+
           if (choice.node === "forestEntrance") {
-            playAreaSound("forest");
             storyContainer.style.display = "none";
             resumeGame();
-          } else if (choice.node === "village") {
-            playAreaSound("village");
+          } else {
             displayNode(choice.node);
           }
         });
@@ -202,7 +230,23 @@ export function displayNode(nodeId) {
 
 // Handle sound resumption
 export function handleGameResume() {
-  if (currentArea && !isPlaying) {
-    playAreaSound(currentArea);
+  if (gameState.currentArea && !isPlaying) {
+    playAreaSound(gameState.currentArea);
+  }
+}
+
+export function switchAreaObjects(area) {
+ gameState.currentArea = area; // This will work
+
+  const gameContainer = document.getElementById("game-container");
+
+  // Clear existing collision objects
+  const existingObjects = gameContainer.querySelectorAll(".collision-object");
+  existingObjects.forEach((obj) => obj.remove());
+
+  // Render new area objects
+  if (areaCollisionZones[area]) {
+    renderCollisionObjects(areaCollisionZones[area]);
+    console.log(`${area} objects rendered`);
   }
 }

@@ -1,6 +1,6 @@
-import { nodes, displayNode } from "./story.js";
-import { collisionZones } from "./objects.js";
-import { checkCollisionWithOrc1, initiateCombatWithOrc1, animateOrc1, updateOrc1Position, checkPlayerAttackHit, handleOrcHit } from "./enemies.js";
+import { displayNode } from "./story.js";
+import { HIDDEN_OBJECTS, areaCollisionZones } from "./objects.js";
+import { checkCollisionWithOrc1, initiateCombatWithOrc1, animateOrc1, checkPlayerAttackHit } from "./enemies.js";
 import { isGameOverState } from "./combat.js";
 
 
@@ -16,6 +16,10 @@ export function pauseGame() {
 export function resumeGame() {
   gamePaused = false;
 }
+
+export const gameState = {
+  currentArea: "forest",
+};
 
 // Get DOM elements
 const startMenu = document.getElementById("start-menu");
@@ -195,7 +199,9 @@ const BEHIND_BUT_SOLID = ["house", "house2", "cabin"];
 const DYNAMIC_Z_INDEX_OBJECTS = ["tree", "rock"];
 
 // Function to Render Collision Objects
-function renderCollisionObjects() {
+export function renderCollisionObjects(collisionZones) {
+  if (!collisionZones) return;
+
   collisionZones.forEach((zone) => {
     const obj = document.createElement("div");
     obj.classList.add("collision-object", zone.type);
@@ -207,7 +213,6 @@ function renderCollisionObjects() {
       zone.sprite.column * FRAME_WIDTH * 2
     }px -${zone.sprite.row * FRAME_HEIGHT * 2}px`;
 
-    // Set initial z-index based on object type
     if (
       ALWAYS_BELOW_CHARACTER.includes(zone.type) ||
       BEHIND_BUT_SOLID.includes(zone.type)
@@ -217,8 +222,7 @@ function renderCollisionObjects() {
       obj.style.zIndex = 1;
     }
 
-    // Hide open chest initially
-    if (zone.type === "openChest") {
+    if (HIDDEN_OBJECTS.includes(zone.type)) {
       obj.style.display = "none";
     }
 
@@ -226,17 +230,19 @@ function renderCollisionObjects() {
   });
 }
 
+// Initial render (for forest)
+renderCollisionObjects(areaCollisionZones.forest);
 
 // Function to check if character is above or below an object's midpoint
 function updateObjectDepth() {
   const characterMidpoint = character.y + DISPLAY_FRAME_HEIGHT / 2;
+  const currentCollisionZones = areaCollisionZones[gameState.currentArea];
 
-  collisionZones.forEach((zone) => {
+  currentCollisionZones.forEach((zone) => {
     const objectElement = document.querySelector(
       `.collision-object.${zone.type}`
     );
     if (!objectElement) return;
-
     // Always below character objects and behind but solid objects
     if (
       ALWAYS_BELOW_CHARACTER.includes(zone.type) ||
@@ -295,12 +301,12 @@ function updateCharacterPosition() {
 gameContainer.style.position = "relative";
 
 // Initialize objects
-if (collisionZones && collisionZones.length > 0) {
-  renderCollisionObjects();
-  console.log("Collision objects rendered");
+/*if (areaCollisionZones.forest && areaCollisionZones.forest.length > 0) {
+  renderCollisionObjects(areaCollisionZones.forest);
+  console.log("Forest collision objects rendered");
 } else {
   console.warn("No collision zones to render");
-}
+}*/
 
 // Key state tracking
 const keysPressed = {};
@@ -313,7 +319,6 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     keysPressed[event.key] = true;
 
-    // Only set currentMovementKey if no other movement key is being processed
     if (!currentMovementKey) {
       currentMovementKey = event.key;
     }
@@ -353,7 +358,6 @@ document.addEventListener("keyup", (event) => {
 
 // Add collision checking function
 function checkCollision(newX, newY) {
-  // Define character hitbox
   const characterHitbox = {
     x: newX + DISPLAY_FRAME_WIDTH * 0.2,
     y: newY + DISPLAY_FRAME_HEIGHT * 0.6,
@@ -361,10 +365,13 @@ function checkCollision(newX, newY) {
     height: DISPLAY_FRAME_HEIGHT * 0.3,
   };
 
+  // Get current area's collision zones
+  const currentCollisionZones = areaCollisionZones[gameState.currentArea];
+  if (!currentCollisionZones) return false;
+
   // Check collision with static objects
-  for (const zone of collisionZones) {
+  for (const zone of currentCollisionZones) {
     if (!zone || typeof zone.type === "undefined") {
-      //console.warn("Invalid collision zone encountered:", zone);
       continue;
     }
 
@@ -376,15 +383,13 @@ function checkCollision(newX, newY) {
     // Create object hitbox with special handling for houses
     let objectHitbox;
     if (BEHIND_BUT_SOLID.includes(zone.type)) {
-      // Expand collision area for houses
       objectHitbox = {
         x: zone.x,
-        y: zone.y + zone.height * 0.7, // Adjust this value to change where collision starts
+        y: zone.y + zone.height * 0.7,
         width: zone.width,
-        height: zone.height * 0.4, // Adjust this value to change collision area size
+        height: zone.height * 0.4,
       };
     } else {
-      // Standard hitbox for other objects
       objectHitbox = {
         x: zone.x,
         y: zone.y,
@@ -393,27 +398,27 @@ function checkCollision(newX, newY) {
       };
     }
 
-    // Check for collision with static object
+    // Check for collision
     if (
       characterHitbox.x < objectHitbox.x + objectHitbox.width &&
       characterHitbox.x + characterHitbox.width > objectHitbox.x &&
       characterHitbox.y < objectHitbox.y + objectHitbox.height &&
       characterHitbox.y + characterHitbox.height > objectHitbox.y
     ) {
-      return true; // Collision detected with static object
+      return true;
     }
   }
 
   // Check collision with Orc1 and handle combat
   if (checkCollisionWithOrc1(characterHitbox)) {
     console.log("Collision detected with Orc1!");
-    return true; // Collision detected
+    return true;
   }
 
   // Check for combat range even if not colliding
   initiateCombatWithOrc1(characterHitbox);
 
-  return false; // No collision
+  return false;
 }
 
 // Variables for animation timing
