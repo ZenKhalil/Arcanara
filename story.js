@@ -3,9 +3,10 @@ import {
   resumeGame,
   renderCollisionObjects,
   gameState,
+  setCharacterPosition
 } from "./script.js";
-
 import { areaCollisionZones } from "./objects.js";
+import { updateOrcPosition, resetOrc } from "./enemies.js";
 
 // Audio management for different areas
 const backgroundSounds = {
@@ -236,7 +237,7 @@ export function handleGameResume() {
 }
 
 export function switchAreaObjects(area) {
- gameState.currentArea = area; // This will work
+  gameState.currentArea = area;
 
   const gameContainer = document.getElementById("game-container");
 
@@ -248,5 +249,13 @@ export function switchAreaObjects(area) {
   if (areaCollisionZones[area]) {
     renderCollisionObjects(areaCollisionZones[area]);
     console.log(`${area} objects rendered`);
+
+    // Set character position for new area
+    setCharacterPosition(area);
+
+    // Update orc position and state for new area
+    updateOrcPosition(area);
+    // Reset orc state if needed
+    resetOrc(area);
   }
 }

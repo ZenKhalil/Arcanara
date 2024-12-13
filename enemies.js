@@ -24,10 +24,21 @@ const IDLE_SHEET_HEIGHT = 384;
 const ATTACK_SHEET_WIDTH = 768;
 const ATTACK_SHEET_HEIGHT = 384;
 
+const orcStartPositions = {
+  forest: {
+    x: 770,
+    y: 100,
+  },
+  village: {
+    x: 550,
+    y: 200,
+  },
+};
+
 // Orc1 setup
 const orc1 = {
-  x: 770,
-  y: 100,
+  x: orcStartPositions.forest.x, 
+  y: orcStartPositions.forest.y,
   width: 96,
   height: 96,
   isInCombat: false,
@@ -94,6 +105,37 @@ function handleOrcHit() {
       orc1Element.style.display = "none";
     }
   }
+}
+
+function updateOrcPosition(area) {
+  if (!orc1Element || !orcStartPositions[area]) return;
+
+  // Update orc state with new position
+  orc1.x = orcStartPositions[area].x;
+  orc1.y = orcStartPositions[area].y;
+
+  // Reset orc state when changing areas
+  orc1.isInCombat = false;
+  orc1.currentAction = "idle";
+  orc1.isAttacking = false;
+  orc1.facing = "front";
+
+  // Update visual position
+  orc1Element.style.left = `${orc1.x}px`;
+  orc1Element.style.top = `${orc1.y}px`;
+}
+
+// Reset orc for new area
+function resetOrc(currentArea) {
+  orc1.health = 3;
+  orc1.isDead = false;
+  orc1.isInCombat = false;
+  orc1.currentAction = "idle";
+  orc1.isAttacking = false;
+  if (orc1Element) {
+    orc1Element.style.display = "block";
+  }
+  updateOrcPosition(currentArea);
 }
 
 function updateOrc1Direction(characterX, characterY) {
@@ -346,4 +388,6 @@ export {
   updateOrc1Position,
   handleOrcHit,
   checkPlayerAttackHit,
+  updateOrcPosition,
+  resetOrc,
 };

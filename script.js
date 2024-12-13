@@ -104,6 +104,21 @@ howToPlayBtn.addEventListener("click", () => {
 const gameWidth = 1118;
 const gameHeight = 615;
 
+const collisionCanvas = document.createElement("canvas");
+const collisionCtx = collisionCanvas.getContext("2d", {
+  willReadFrequently: true,
+}); // Add this option
+const collisionImage = new Image();
+
+collisionImage.onload = function () {
+  collisionCanvas.width = gameWidth; // Match game dimensions
+  collisionCanvas.height = gameHeight;
+  collisionCtx.drawImage(collisionImage, 0, 0, gameWidth, gameHeight);
+  console.log("Collision map loaded"); // Debug log
+};
+collisionImage.src = "/images/village-background1.png";
+
+
 // Frame settings
 const FRAME_WIDTH = 32;
 const FRAME_HEIGHT = 32;
@@ -111,16 +126,38 @@ const DISPLAY_FRAME_WIDTH = 64;
 const DISPLAY_FRAME_HEIGHT = 64;
 const ANIMATION_SPEED = 100;
 
+const areaStartPositions = {
+  forest: {
+    x: 1,
+    y: gameHeight * 0.6,
+  },
+  village: {
+    x: 1,
+    y: gameHeight * 0.9,
+  },
+};
+
 // Character setup
 const character = {
-  x: 1,
-  y: gameHeight * 0.6,
+  ...areaStartPositions.forest, // Set initial position
   speed: 200,
   direction: "idle-right",
   isMoving: false,
   isAttacking: false,
   currentFrame: 0,
 };
+
+
+// Add this function
+export function setCharacterPosition(area) {
+  if (!areaStartPositions[area]) return;
+  
+  character.x = areaStartPositions[area].x;
+  character.y = areaStartPositions[area].y;
+  character.direction = 'idle-right'; // Set appropriate starting direction
+  character.currentFrame = 0;
+  updateCharacterPosition();
+}
 
 // Animation frames for each direction
 const animations = {
@@ -356,7 +393,26 @@ document.addEventListener("keyup", (event) => {
   }
 });
 
-// Add collision checking function
+function isWalkable(x, y) {
+  try {
+    // Ensure coordinates are integers and within bounds
+    x = Math.floor(x);
+    y = Math.floor(y);
+
+    if (x < 0 || x >= gameWidth || y < 0 || y >= gameHeight) {
+      return false;
+    }
+
+    const pixelData = collisionCtx.getImageData(x, y, 1, 1).data;
+    console.log(`Checking position (${x}, ${y}), alpha: ${pixelData[3]}`); // Debug log
+    return pixelData[3] === 0; // true if transparent
+  } catch (error) {
+    console.error("Error checking walkable:", error);
+    return false;
+  }
+}
+
+
 function checkCollision(newX, newY) {
   const characterHitbox = {
     x: newX + DISPLAY_FRAME_WIDTH * 0.2,
@@ -365,7 +421,28 @@ function checkCollision(newX, newY) {
     height: DISPLAY_FRAME_HEIGHT * 0.3,
   };
 
-  // Get current area's collision zones
+  if (gameState.currentArea === "village") {
+    // Sample multiple points around the character's hitbox
+    const points = [
+      { x: characterHitbox.x, y: characterHitbox.y }, // Top-left
+      { x: characterHitbox.x + characterHitbox.width, y: characterHitbox.y }, // Top-right
+      { x: characterHitbox.x, y: characterHitbox.y + characterHitbox.height }, // Bottom-left
+      {
+        x: characterHitbox.x + characterHitbox.width,
+        y: characterHitbox.y + characterHitbox.height,
+      }, // Bottom-right
+      {
+        x: characterHitbox.x + characterHitbox.width / 2,
+        y: characterHitbox.y + characterHitbox.height / 2,
+      }, // Center
+    ];
+
+    // Collision occurs if any point is in a non-walkable area
+    const collision = points.some((point) => !isWalkable(point.x, point.y));
+    return collision;
+  }
+  
+  // Forest area uses the original collision system
   const currentCollisionZones = areaCollisionZones[gameState.currentArea];
   if (!currentCollisionZones) return false;
 
@@ -443,7 +520,6 @@ function gameLoop(timestamp) {
 
         // Check for hit on attack frame 2
         if (character.currentFrame === 2) {
-          // Create attack hitbox based on direction
           const attackRange = 40;
           let attackHitbox = {
             x: character.x,
@@ -452,7 +528,6 @@ function gameLoop(timestamp) {
             height: DISPLAY_FRAME_HEIGHT,
           };
 
-          // Adjust hitbox based on attack direction
           switch (character.direction) {
             case "attack-left":
               attackHitbox.x -= attackRange;
@@ -470,8 +545,10 @@ function gameLoop(timestamp) {
               break;
           }
 
-          // Check if attack hits orc
-          checkPlayerAttackHit(attackHitbox);
+          // Only check orc hits in the forest area
+          if (gameState.currentArea === "forest") {
+            checkPlayerAttackHit(attackHitbox);
+          }
         }
 
         if (character.currentFrame >= animations[character.direction].frames) {
@@ -486,7 +563,6 @@ function gameLoop(timestamp) {
       let dx = 0;
       let dy = 0;
 
-      // Only process the current movement key
       if (currentMovementKey) {
         switch (currentMovementKey) {
           case "ArrowUp":
@@ -525,6 +601,7 @@ function gameLoop(timestamp) {
           Math.min(gameHeight - DISPLAY_FRAME_HEIGHT, newY)
         );
 
+        // Use area-specific collision zones
         if (!checkCollision(boundedX, boundedY)) {
           character.x = boundedX;
           character.y = boundedY;
@@ -543,7 +620,7 @@ function gameLoop(timestamp) {
         }
       }
 
-      // Handle animation updates
+      // Handle animation frame updates
       const animation = animations[character.direction];
       if (animation && animation.frames > 1) {
         animationTimer += deltaTime * 1000;
@@ -556,8 +633,10 @@ function gameLoop(timestamp) {
       }
     }
 
-    // Always update orc animation
-    animateOrc1(timestamp, character.x, character.y);
+    // Only update orc animation in forest area
+    if (gameState.currentArea === "forest") {
+      animateOrc1(timestamp, character.x, character.y);
+    }
   }
 
   requestAnimationFrame(gameLoop);
