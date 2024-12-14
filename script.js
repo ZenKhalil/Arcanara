@@ -393,7 +393,7 @@ document.addEventListener("keyup", (event) => {
   }
 });
 
-function isWalkable(x, y) {
+export function isWalkable(x, y) {
   try {
     // Ensure coordinates are integers and within bounds
     x = Math.floor(x);
@@ -421,43 +421,49 @@ function checkCollision(newX, newY) {
     height: DISPLAY_FRAME_HEIGHT * 0.3,
   };
 
+  // Check collision with Orc1 first (should work in both areas)
+  if (checkCollisionWithOrc1(characterHitbox)) {
+    console.log("Collision detected with Orc1!");
+    return true;
+  }
+
+  // Check for combat range even if not colliding
+  initiateCombatWithOrc1(characterHitbox);
+
+  // Then check area-specific collisions
   if (gameState.currentArea === "village") {
     // Sample multiple points around the character's hitbox
     const points = [
-      { x: characterHitbox.x, y: characterHitbox.y }, // Top-left
-      { x: characterHitbox.x + characterHitbox.width, y: characterHitbox.y }, // Top-right
-      { x: characterHitbox.x, y: characterHitbox.y + characterHitbox.height }, // Bottom-left
+      { x: characterHitbox.x, y: characterHitbox.y },
+      { x: characterHitbox.x + characterHitbox.width, y: characterHitbox.y },
+      { x: characterHitbox.x, y: characterHitbox.y + characterHitbox.height },
       {
         x: characterHitbox.x + characterHitbox.width,
         y: characterHitbox.y + characterHitbox.height,
-      }, // Bottom-right
+      },
       {
         x: characterHitbox.x + characterHitbox.width / 2,
         y: characterHitbox.y + characterHitbox.height / 2,
-      }, // Center
+      },
     ];
 
-    // Collision occurs if any point is in a non-walkable area
-    const collision = points.some((point) => !isWalkable(point.x, point.y));
-    return collision;
+    return points.some((point) => !isWalkable(point.x, point.y));
   }
-  
-  // Forest area uses the original collision system
+
+  // Forest area collision checks
   const currentCollisionZones = areaCollisionZones[gameState.currentArea];
   if (!currentCollisionZones) return false;
 
   // Check collision with static objects
   for (const zone of currentCollisionZones) {
-    if (!zone || typeof zone.type === "undefined") {
+    if (
+      !zone ||
+      typeof zone.type === "undefined" ||
+      ALWAYS_BELOW_CHARACTER.includes(zone.type)
+    ) {
       continue;
     }
 
-    // Skip collision check only for ALWAYS_BELOW_CHARACTER objects
-    if (ALWAYS_BELOW_CHARACTER.includes(zone.type)) {
-      continue;
-    }
-
-    // Create object hitbox with special handling for houses
     let objectHitbox;
     if (BEHIND_BUT_SOLID.includes(zone.type)) {
       objectHitbox = {
@@ -475,7 +481,6 @@ function checkCollision(newX, newY) {
       };
     }
 
-    // Check for collision
     if (
       characterHitbox.x < objectHitbox.x + objectHitbox.width &&
       characterHitbox.x + characterHitbox.width > objectHitbox.x &&
@@ -485,15 +490,6 @@ function checkCollision(newX, newY) {
       return true;
     }
   }
-
-  // Check collision with Orc1 and handle combat
-  if (checkCollisionWithOrc1(characterHitbox)) {
-    console.log("Collision detected with Orc1!");
-    return true;
-  }
-
-  // Check for combat range even if not colliding
-  initiateCombatWithOrc1(characterHitbox);
 
   return false;
 }
@@ -520,12 +516,12 @@ function gameLoop(timestamp) {
 
         // Check for hit on attack frame 2
         if (character.currentFrame === 2) {
-          const attackRange = 40;
+          const attackRange = 60; // Increased from 40
           let attackHitbox = {
-            x: character.x,
-            y: character.y,
-            width: DISPLAY_FRAME_WIDTH,
-            height: DISPLAY_FRAME_HEIGHT,
+            x: character.x + DISPLAY_FRAME_WIDTH * 0.2,
+            y: character.y + DISPLAY_FRAME_HEIGHT * 0.6,
+            width: DISPLAY_FRAME_WIDTH * 0.6,
+            height: DISPLAY_FRAME_HEIGHT * 0.3,
           };
 
           switch (character.direction) {
@@ -545,10 +541,7 @@ function gameLoop(timestamp) {
               break;
           }
 
-          // Only check orc hits in the forest area
-          if (gameState.currentArea === "forest") {
             checkPlayerAttackHit(attackHitbox);
-          }
         }
 
         if (character.currentFrame >= animations[character.direction].frames) {
@@ -634,9 +627,7 @@ function gameLoop(timestamp) {
     }
 
     // Only update orc animation in forest area
-    if (gameState.currentArea === "forest") {
       animateOrc1(timestamp, character.x, character.y);
-    }
   }
 
   requestAnimationFrame(gameLoop);

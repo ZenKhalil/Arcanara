@@ -1,5 +1,5 @@
 import { handlePlayerHit, isGameOverState } from "./combat.js";
-
+import { isWalkable, gameState } from "./script.js";
 
 // Select orc1 element
 const orc1Element = document.getElementById("orc1");
@@ -298,7 +298,7 @@ function animateOrc1(timestamp, characterX, characterY) {
 function initiateCombatWithOrc1(characterHitbox) {
   if (isGameOverState() || orc1.isDead) return false;
 
-  const COMBAT_RANGE = 100;
+  const COMBAT_RANGE = gameState.currentArea === "village" ? 120 : 100; // Slightly larger range in village
   const currentTime = Date.now();
 
   const dx =
@@ -345,6 +345,24 @@ function checkCollisionWithOrc1(characterHitbox) {
     height: orc1.height * 0.5,
   };
 
+  // For village area, also check if orc is in walkable area
+  if (gameState.currentArea === "village") {
+    const points = [
+      { x: orc1Hitbox.x, y: orc1Hitbox.y },
+      { x: orc1Hitbox.x + orc1Hitbox.width, y: orc1Hitbox.y },
+      { x: orc1Hitbox.x, y: orc1Hitbox.y + orc1Hitbox.height },
+      {
+        x: orc1Hitbox.x + orc1Hitbox.width,
+        y: orc1Hitbox.y + orc1Hitbox.height,
+      },
+    ];
+
+    // If orc is in non-walkable area, no collision
+    if (points.some((point) => !isWalkable(point.x, point.y))) {
+      return false;
+    }
+  }
+
   return checkCollision(characterHitbox, orc1Hitbox);
 }
 
@@ -359,15 +377,44 @@ function updateOrc1Position(newX, newY) {
   }
 }
 
- function checkPlayerAttackHit(playerHitbox) {
+// Let's modify checkPlayerAttackHit to better align with the combat system
+function checkPlayerAttackHit(playerHitbox) {
   if (orc1.isDead) return false;
 
+  // Debug visualization for both hitboxes
   const orcHitbox = {
     x: orc1.x + orc1.width * 0.2,
     y: orc1.y + orc1.height * 0.3,
     width: orc1.width * 0.6,
-    height: orc1.height * 0.5,
+    height: orc1.height * 0.5
   };
+
+  // Add debug visualization
+  const debugHitbox = document.createElement('div');
+  debugHitbox.style.position = 'absolute';
+  debugHitbox.style.left = `${orcHitbox.x}px`;
+  debugHitbox.style.top = `${orcHitbox.y}px`;
+  debugHitbox.style.width = `${orcHitbox.width}px`;
+  debugHitbox.style.height = `${orcHitbox.height}px`;
+  debugHitbox.style.border = '2px solid blue';
+  debugHitbox.style.pointerEvents = 'none';
+  document.body.appendChild(debugHitbox);
+  
+  // Also visualize player attack hitbox
+  const debugPlayerHitbox = document.createElement('div');
+  debugPlayerHitbox.style.position = 'absolute';
+  debugPlayerHitbox.style.left = `${playerHitbox.x}px`;
+  debugPlayerHitbox.style.top = `${playerHitbox.y}px`;
+  debugPlayerHitbox.style.width = `${playerHitbox.width}px`;
+  debugPlayerHitbox.style.height = `${playerHitbox.height}px`;
+  debugPlayerHitbox.style.border = '2px solid green';
+  debugPlayerHitbox.style.pointerEvents = 'none';
+  document.body.appendChild(debugPlayerHitbox);
+
+  setTimeout(() => {
+    debugHitbox.remove();
+    debugPlayerHitbox.remove();
+  }, 100);
 
   const hit = checkCollision(playerHitbox, orcHitbox);
   if (hit) {
