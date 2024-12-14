@@ -147,7 +147,7 @@ export const forestCollisionZones = [
   },
 ];
 
-// Village area collision zones (create new ones specific to village)
+// Village area collision zones
 export const villageCollisionZones = [
   // Add village-specific objects here
  /* {

@@ -395,7 +395,6 @@ document.addEventListener("keyup", (event) => {
 
 export function isWalkable(x, y) {
   try {
-    // Ensure coordinates are integers and within bounds
     x = Math.floor(x);
     y = Math.floor(y);
 
@@ -632,7 +631,7 @@ function gameLoop(timestamp) {
 
   requestAnimationFrame(gameLoop);
 }
-// Then modify your keydown and keyup event handlers:
+//  modify  keydown and keyup event handlers:
 /*window.addEventListener("keydown", (event) => {
   if (!gameStarted) return;
   

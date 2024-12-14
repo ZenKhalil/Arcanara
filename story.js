@@ -129,7 +129,6 @@ export function displayNode(nodeId) {
     "display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 20px;";
   storyContainer.appendChild(contentWrapper);
 
-  // Add image if present
   if (node.image) {
     const imageElement = document.createElement("img");
     imageElement.src = node.image;
@@ -255,7 +254,6 @@ export function switchAreaObjects(area) {
 
     // Update orc position and state for new area
     updateOrcPosition(area);
-    // Reset orc state if needed
     resetOrc(area);
   }
 }

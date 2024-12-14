@@ -377,7 +377,6 @@ function updateOrc1Position(newX, newY) {
   }
 }
 
-// Let's modify checkPlayerAttackHit to better align with the combat system
 function checkPlayerAttackHit(playerHitbox) {
   if (orc1.isDead) return false;
 
@@ -389,7 +388,7 @@ function checkPlayerAttackHit(playerHitbox) {
     height: orc1.height * 0.5
   };
 
-  // Add debug visualization
+  //  debug visualization
   const debugHitbox = document.createElement('div');
   debugHitbox.style.position = 'absolute';
   debugHitbox.style.left = `${orcHitbox.x}px`;
@@ -400,7 +399,7 @@ function checkPlayerAttackHit(playerHitbox) {
   debugHitbox.style.pointerEvents = 'none';
   document.body.appendChild(debugHitbox);
   
-  // Also visualize player attack hitbox
+  //  visualize player attack hitbox
   const debugPlayerHitbox = document.createElement('div');
   debugPlayerHitbox.style.position = 'absolute';
   debugPlayerHitbox.style.left = `${playerHitbox.x}px`;
